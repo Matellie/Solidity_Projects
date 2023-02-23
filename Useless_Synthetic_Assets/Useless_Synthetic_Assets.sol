@@ -2,18 +2,27 @@
 pragma solidity ^0.8.17;
 
 import 'uUSD.sol';
+import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract Useless_Stacking is Ownable {
+    using SafeCast for int256;
+    using SafeMath for uint256;
 
     uUSD public uUSD_token;
+    // Network: Ethereum Mainnet Aggregator: ETH/USD 
+    // Address: 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419
+    AggregatorV3Interface internal eth_usd_priceFeed;
 
-    uint8 public collateralFactor;      // value(ETH)/value(uUSD) > 1
+    uint8 public collateralFactor;      // value(ETH)/value(uUSD)=collateralFactor > 1
     uint8 public liquidationPenalty;    // 0 <= liqPen <= 100 (in percent %)
     uint16 public nbMinters;
     mapping(address => uint) public balances;
 
     constructor() {
         uUSD_token = new uUSD();
+        eth_usd_priceFeed = AggregatorV3Interface(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
         nbMinters = 0;
     }
 
@@ -28,12 +37,20 @@ contract Useless_Stacking is Ownable {
     }
 
     // Fetch price of ETH from an Oracle
-    function getPriceETHUSD() internal {
-
+    function getPriceETHUSD() internal returns(uint256) {
+        (
+            /* uint80 roundID */,
+            int price,
+            /*uint startedAt*/,
+            /*uint timeStamp*/,
+            /*uint80 answeredInRound*/
+        ) = eth_usd_priceFeed.latestRoundData();
+        return price.toUint256();
     }
 
     // Mint a cretain amount of uUSD matching the target collateral factor
-    function mint() external payable {
+    function mint(uint256 _targetColFact) external payable {
+        require(_targetColFact > collateralFactor, "The collateral factor is not valid !")
 
     }
 
