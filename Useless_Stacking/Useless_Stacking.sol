@@ -5,7 +5,7 @@ import 'USLS.sol';
 
 contract Useless_Stacking {
 
-    KSIL public USLS;
+    USLS public USLS_token;
 
     mapping(address => uint) public balances;
     uint16 public nbStackers;
@@ -13,7 +13,7 @@ contract Useless_Stacking {
     mapping(address => uint) public timestamps;
 
     constructor() {
-        USLS = new KSIL();
+        USLS_token = new USLS();
         nbStackers = 0;
     }
 
@@ -51,7 +51,7 @@ contract Useless_Stacking {
 
         uint reward = (block.timestamp - timestamps[msg.sender]) * balances[msg.sender];
 
-        USLS.mint(msg.sender, reward);
+        USLS_token.mint(msg.sender, reward);
         timestamps[msg.sender] = block.timestamp;
     }
 
