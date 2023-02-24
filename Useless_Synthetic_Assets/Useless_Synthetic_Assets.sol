@@ -11,14 +11,20 @@ contract Useless_Stacking is Ownable {
     using SafeMath for uint256;
 
     uUSD public uUSD_token;
+
     // Network: Ethereum Mainnet Aggregator: ETH/USD 
     // Address: 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419
     AggregatorV3Interface internal eth_usd_priceFeed;
 
+    struct UserBalance {
+        uint256 nb_ETH;
+        uint256 nb_uUSD;
+    }
+
     uint8 public collateralFactor;      // value(ETH)/value(uUSD)=collateralFactor > 1
     uint8 public liquidationPenalty;    // 0 <= liqPen <= 100 (in percent %)
     uint16 public nbMinters;
-    mapping(address => uint) public balances;
+    mapping(address => UserBalance) public balances;
 
     constructor() {
         uUSD_token = new uUSD();
@@ -49,12 +55,21 @@ contract Useless_Stacking is Ownable {
     }
 
     // Mint a cretain amount of uUSD matching the target collateral factor
-    function mint(uint256 _targetColFact) external payable {
-        require(_targetColFact > collateralFactor, "The collateral factor is not valid !")
+    function mint(uint256 _targetCollateralFactor) external payable {
+        require(_targetCollateralFactor > collateralFactor, "The target collateral factor is not valid !");
 
+        // Compute amount to mint
+        uint256 amount_uUSD = (msg.value * getPriceETHUSD()) / _targetCollateralFactor;
+
+        // Update user balance
+        balances[msg.sender].nb_ETH += msg.value;
+        balances[msg.sender].nb_uUSD += amount_uUSD;
+
+        // Mint the tokens
+        uUSD_token.mint(msg.sender, amount_uUSD);
     }
 
-    // Burn a certain amount of uUSD 
+    // Burn a certain amount of uUSD to get ETH back
     function burn() external {
 
     }
